@@ -2,7 +2,7 @@ package searcher
 
 import "strings"
 
-//SearchResult Fuck
+//SearchResult structure
 type SearchResult struct {
 	Position int
 	Result   string
