@@ -1,12 +1,19 @@
 package searcher
 
-import "strings"
+import (
+	"strings"
+	"sync"
+)
 
 //SearchResult structure
 type SearchResult struct {
 	Position int
 	Result   string
 }
+
+var (
+	locker sync.Mutex
+)
 
 //Search function
 func Search(str, subStr string) []SearchResult {
@@ -15,15 +22,22 @@ func Search(str, subStr string) []SearchResult {
 
 	for index := 0; index < len(str); index++ {
 		if str[index] == ' ' {
-			var subArray = searchForAllSubstrings(str[startIndex:index], subStr)
-			subArray = shiftAllPositions(subArray, startIndex)
-			array = appendArray(array, subArray)
-			startIndex = index + 1
+			locker.Lock()
+			go cutWords(&startIndex, index, str, subStr, &array)
 		}
 	}
+
 	var subArray = searchForAllSubstrings(str[startIndex:len(str)], subStr)
 	subArray = shiftAllPositions(subArray, startIndex)
 	return appendArray(array, subArray)
+}
+
+func cutWords(startIndex *int, index int, str, subStr string, array *[]SearchResult) {
+	var subArray = searchForAllSubstrings(str[*startIndex:index], subStr)
+	subArray = shiftAllPositions(subArray, *startIndex)
+	*array = appendArray(*array, subArray)
+	*startIndex = index + 1
+	locker.Unlock()
 }
 
 func searchForAllSubstrings(str, subStr string) []SearchResult {
